@@ -50,7 +50,7 @@ input_beam = struct(...
 
 %% Define parameters for near field calculations
 near_field = struct(...
-    'plane_coord',2,...
+    'plane_cord',2,...
     'plane_position',0,...
     'plane_vertices',[-3000,-3000,3000,6000],...
     'resolution',0.5,...
@@ -100,25 +100,24 @@ end
 
 %% GENERATE MSTM SIMULATION FILES TO RUN
 %%
-
-input_angle = 0:5:90;
+clc
+input_angle = 0:5:180;
 % LOOP OVER PARAMETERS YOU WANT TO SWEEP
 for idx = 1:length(input_angle)
-    input_beam.incident_azimuth_angle_deg = inpu
+    input_beam.incident_polar_angle_deg = input_angle(idx);
     
-fname{idx}= strcat('mstm_',... %GIVE A FILE NAME!
-        sprintf( '%03d', idx ));
+    fname{idx}= strcat('mstm_',... %GIVE A FILE NAME!
+            sprintf( '%03d', idx ));
 
-% THIS FUNCTION GENERATES THE MSTM INPUTS
-make_mstm_NERSC_job(parentdir,...
-                    fname{idx},...
-                    spheres,...
-                    mstm_flags,...
-                    convergence,...
-                    input_beam,...
-                    near_field,...
-                    mstm_input_params) 
-
+    % THIS FUNCTION GENERATES THE MSTM INPUTS
+    make_mstm_job(parentdir,...
+                        fname{idx},...
+                        spheres,...
+                        mstm_flags,...
+                        convergence,...
+                        input_beam,...
+                        near_field,...
+                        mstm_input_params) 
 end
  
 %% RUN SIMULATION FILES
@@ -144,10 +143,26 @@ copyfile(mstm_location, parentdir);
 % Run one parallelized simulation at a time
 for idx = 1:length(fname)
     % Run MSTM code (Specify number of cores here)
-    command{idx} = ['/usr/lib64/openmpi/bin/mpirun -n 4 ./mstm_parallel_ubuntu.out ',fname{idx},'.inp'];
-     [status,cmdout] = system(command,'-echo');
+    command{idx} = ['/usr/lib64/openmpi/bin/mpirun -n 6 ./mstm_parallel_ubuntu.out ',fname{idx},'.inp'];
+    [status,cmdout] = system(command{idx},'-echo');
     %[status,cmdout] = system(command{idx});
 end
+
+
+
+%% EXTRACT MSTM DATA FOR POSTPROCESSING
+%%
+
+
+for idx = 1:length(fname)
+    
+    filename = strcat(parentdir,'/',fname{idx});
+    [cluster_data, sphere_data, excitation_data] = export_output_file(strca);
+    [sphere_data{idx}, alpha, beta, cbeam, m_med, Nspheres, Nequs] = export_mstm_scattering_coeffs_v3(File);
+end
+
+
+
 
 
 

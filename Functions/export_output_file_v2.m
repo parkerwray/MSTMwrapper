@@ -1,5 +1,5 @@
 
-function [cluster, sphere, excitation] = export_output_file(File)
+function [cluster, sphere, excitation] = export_output_file_v2(File)
 
 %{
 This function reads the standard output file from MSTM and saves the results
@@ -35,7 +35,7 @@ while ~feof(fid)
     text{line} = fgetl(fid);
     line = line+1;
 end
-fclose(fid)
+fclose(fid);
 text = text';
 
 

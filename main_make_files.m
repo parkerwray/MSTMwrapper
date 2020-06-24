@@ -100,8 +100,8 @@ end
 
 %% GENERATE MSTM SIMULATION FILES TO RUN
 %%
-clc
-input_angle = 0:5:90;
+
+input_angle = 0:5:180;
 % LOOP OVER PARAMETERS YOU WANT TO SWEEP
 for idx = 1:length(input_angle)
     input_beam.incident_polar_angle_deg = input_angle(idx);
@@ -147,6 +147,27 @@ for idx = 1:length(fname)
     [status,cmdout] = system(command{idx},'-echo');
     %[status,cmdout] = system(command{idx});
 end
+
+
+
+%% EXTRACT MSTM DATA FOR POSTPROCESSING
+%%
+
+
+for idx = 1:length(fname)
+    filename = strcat(parentdir,'/',fname{idx});
+    [cluster_data{idx}, sphere_data{idx}, excitation_data{idx}] =...
+        export_output_file_v2(strcat(filename,'_output.dat'));
+    [sphere_coeff_data{idx}, alpha(idx), beta(idx), cbeam(idx),...
+        m_med(idx), Nspheres(idx), Nequs(idx)] =...
+        export_mstm_scattering_coeffs_v3(strcat(filename,'_scat_coeffs.dat'));
+end
+
+oldFolder = cd(parentdir);
+if SAVE_FLAG == 1
+    save('Simulation_Output_Workspace.mat');
+end
+
 
 
 
