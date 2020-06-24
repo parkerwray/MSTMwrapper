@@ -1,21 +1,95 @@
 clear;
 clc;
 
+%% GENERAL FLAGS
+SAVE_FLAG = 1;
 
 %% SPECIFY LOCATION TO SAVE INPUT FILES
-% Use if running on NERSC
+%% Use if running on NERSC
 %parentdir = uigetdir('$ME','Specify Save Directory'); %Use if running on NERSC cluster
 
-% Use if running on Windows
- parentdir = uigetdir('Z:','Specify Save Directory');
+%% Use if running on Windows
+%parentdir = uigetdir('Z:','Specify Save Directory');
  
+%% Use if running on Linux
+addpath(genpath('/home/parkerwray/hypnos/Codes/MSTMwrapper'));  
+addpath(genpath('/home/parkerwray/hypnos/Codes/Matlab Functions'));  
+parentdir = uigetdir('/home/parkerwray/hypnos',' Specify Save Directory');
 
+%% SPECIFY GENERAL PARAMETERS FOR MSTM RUN
+%% Set flags for MSTM run
+mstm_flags = struct('write_sphere_data', 1,...
+    'store_translation_matrix', 0,...
+    'normalize_scattering_matrix',0,...
+    'fixed_or_random_orientation',0,...
+    'calculate_scattering_coefficients',1,...
+    'track_nearfield_iterations',1,...
+    'calculate_near_field',0,...  
+    'calculate_t_matrix', 0,...   
+    'azimuth_average_scattering_matrix',0);
+
+%% Define parameters for solution convergence
+convergence = struct(...
+    'mie_epsilon', 10^-6,...
+    'translation_epsilon', 10^-6,...
+    'solution_epsilon', 10^-6,...
+    'max_number_iterations', 100000,...
+    'plane_wave_epsilon',10^-6,...
+    't_matrix_convergence_epsilon',10^-6,...    
+    'sm_number_processors', 1000,...
+    'iterations_per_correction', 20);
+
+%% Define parameters for the input beam.
+input_beam = struct(...
+    'incident_or_target_frame', 0,... 
+    'gaussian_beam_width', [],...
+    'beam_type', 0,... % 0 = plane wave, 1 = Gaussian beam
+    'incident_azimuth_angle_deg', 0,... % Alpha
+    'incident_polar_angle_deg', 0,... % Beta
+    'polarization_angle_deg',0); % Gamma
+
+%% Define parameters for near field calculations
+near_field = struct(...
+    'plane_cord',2,...
+    'plane_position',0,...
+    'plane_vertices',[-3000,-3000,3000,6000],...
+    'resolution',0.5,...
+    'near_field_output_data',2);
+
+%% Define parameters for particle distribution
+mstm_input_params = struct(...
+    'Nspheres', [],... 
+    'k',[],...
+    'real_ref_index_scale_factor', 1,...
+    'imag_ref_index_scale_factor',1,...
+    'real_chiral_factor', 0,...
+    'imag_chiral_factor', 0,...
+    'medium_real_ref_index',1,...
+    'medium_imag_ref_index',0,...
+    'medium_real_chiral_factor',0,...
+    'medium_imag_chiral_factor',0);
+
+
+%% SIMULATION MATERIAL AND CLUSTER PROPERTIES 
+%% 
+%{ 
+Run files here that generate particle distributions that you want to
+simulate. It is best that this code is determined by a secondary file that
+can be called as a function. The output must have the standard format:
+Input: 
+    wavelengths
+Output:
+    spheres = [r, x, y, z, real RI, imag RI]
+%}
+wavelengths = 500;
+spheres = Dual_Sphere_Anisotropic_Kerker_20_06_23(wavelengths);
+mstm_input_params.Nspheres = size(spheres,1);
 %% SIMULATION EXCITATION WAVE PARAMETERS
-beam_type = 0; % 0 = plane wave, 1 = Gaussian beam
 
-if beam_type == 1
-    beam_waist = ceil(1./(0.19.*k)); % Spot RADIUS at focus
-    Zr = (pi.*beam_waist.^2)./lda; % Rayleigh range in [nm]
+mstm_input_params.k = 2*pi./wavelengths;
+if input_beam.beam_type == 1
+    beam_waist = ceil(1./(0.19.*mstm_input_params.k)); % Spot RADIUS at focus
+    Zr = (pi.*beam_waist.^2)./wavelengths; % Rayleigh range in [nm]
     disp(['The input beam diameter is ', num2str(2.*beam_waist), 'nm at focus'])
     disp(['The depth of field is ', num2str(2.*Zr), 'nm'])
     disp(['The unitless parameter is ', num2str(1./(k.*beam_waist)), ' (should be <= 0.2)'])
@@ -23,146 +97,79 @@ else
     beam_waist = 0;
 end
 
-%beam_width = lda;   % 0 = plane wave, 1/w*k = Gaussian beam, beam_width = width [nm];
-alpha = 0; % input wave polar angle
-beta = 0; % input wave venith angle
-pol = 0; % polarization state
 
-%% SIMULATION PLOT NEAR FIELD PARAMETERS
-near_field_cords = [-3000,-3000,3000,6000]; % [-x ,-y ,x ,y] Coordinates [unit nm]
-near_field_resolution = 0.5;
-
-
-%% SIMULATION SPHERE CLUSTER PARAMETERS
-clearvars r ff bounds dimension giggles cord a am Nspheres
+%% GENERATE MSTM SIMULATION FILES TO RUN
+%%
 clc
-r = 82;
-ff = 0.3;
-bounds = [10000, 10000, 1];
-%bounds = [1000, 1000, 1000];
-dimension = 2;
-%giggles = 500;
-giggles = 5000;
+input_angle = 0:5:90;
+% LOOP OVER PARAMETERS YOU WANT TO SWEEP
+for idx = 1:length(input_angle)
+    input_beam.incident_azimuth_angle_deg = input_angle(idx);
+    
+    fname{idx}= strcat('mstm_',... %GIVE A FILE NAME!
+            sprintf( '%03d', idx ));
 
-[cord, bounds, a, am, Nspheres] = ...
-    make_random_fcc_v3(r, ff, bounds, giggles, dimension);
-lower_bound = bounds(1,:);
-upper_bound = bounds(2,:);
-make_spheres_in_rectangle(cord, r, lower_bound, upper_bound)
-
-
-%% SIMULATION MATERIAL PROPERTIES PARAMETERS
-mat_file = '/global/cfs/cdirs/m2542/parkerwray/20_06_15_Material Data/Refractive Index Info/Ag_Yang.csv';
-name = 'Ag';
-mat1 = pw_read_refinfo_mat(name, mat_file, 1);
-
-mat_file = '/global/cfs/cdirs/m2542/parkerwray/20_06_15_Material Data/Refractive Index Info/Ge.csv';
-name = 'Ge';
-mat2 = pw_read_refinfo_mat(name, mat_file, 1);
-mat2.k(mat2.k==0) = 1.*10^(-6);
-
-wavelengths = [400:50:500]; %[400:10:1000, 1100:100:5000, 5100:200:10000];
-mat1 = index_in_range(mat1, wavelengths, 1);
-mat2 = index_in_range(mat2, wavelengths, 1);
-k = 2*pi./wavelengths;
-
-%% Compile sphere [radius, x, y, z, n, k] into matrix for outermost shell
-clearvars spheres spheres_layer1 spheres_layer2 spheres_layer3
-
-r = 82;
-dummy = [r.*ones(size(cord,1),1), cord];
-for idx = 1:length(wavelengths)
-  spheres_layer3(:,:,idx) = [dummy,...
-        mat1.n(idx).*ones(size(cord,1),1),...
-        mat1.k(idx).*ones(size(cord,1),1)];
+    % THIS FUNCTION GENERATES THE MSTM INPUTS
+    make_mstm_job(parentdir,...
+                        fname{idx},...
+                        spheres,...
+                        mstm_flags,...
+                        convergence,...
+                        input_beam,...
+                        near_field,...
+                        mstm_input_params) 
 end
-
-r = 80;
-dummy = [r.*ones(size(cord,1),1), cord];
-for idx = 1:length(wavelengths)
-  spheres_layer2(:,:,idx) = [dummy,...
-        mat2.n(idx).*ones(size(cord,1),1),...
-        mat2.k(idx).*ones(size(cord,1),1)];
-end
-
-r = 40;
-dummy = [r.*ones(size(cord,1),1), cord];
-for idx = 1:length(wavelengths)
-  spheres_layer1(:,:,idx) = [dummy,...
-        mat1.n(idx).*ones(size(cord,1),1),...
-        mat1.k(idx).*ones(size(cord,1),1)];
-end
-
-spheres = [spheres_layer3; spheres_layer2; spheres_layer1];
-
-
+ 
+%% RUN SIMULATION FILES
 %%
-Nspheres = size(spheres,1); % Account for spheres inside spheres.
-medium_m = 1;
-for idx = 1:length(wavelengths)
-fname= strcat('mstm',... %GIVE A FILE NAME!
-        '_lda_', num2str(wavelengths(idx)),'nm');
-make_mstm_NERSC_job(parentdir, fname, spheres(:,:,idx), Nspheres, medium_m, k(idx),...
-    beam_type, beam_waist,alpha, beta, pol, near_field_cords,...
-    near_field_resolution);
+oldFolder = cd(parentdir);
+if SAVE_FLAG == 1
+    save('Simulation_Input_Workspace.mat');
+    save('Simulation_Input_File.m');
 end
 
-%%
-nodes = '2';
-time = '00:05:00';
-jobs = idx;
-make_mstm_SLURM_KNL_array_file(parentdir, nodes, time, jobs)
+%% Use if running on NERSC
+% nodes = '2';
+% time = '00:05:00';
+% jobs = idx;
+% make_mstm_SLURM_KNL_array_file(parentdir, nodes, time, jobs)
 
+%% Use if running on Linux
 
-%%
+% Copy mstm runfile to folder
+mstm_location = '/home/parkerwray/hypnos/Codes/MSTMwrapper/mstm_parallel_ubuntu.out';
+copyfile(mstm_location, parentdir);
 
-mstm_flags = struct{...
-    'write_sphere_data_flag', 1,...
-    'store_translation_matrix_flag', 0,...
-    'normalize_scattering_matrix_flag',0,...
-    'fixed_or_random_orientation_flag',0,...
-    'calculate_scattering_coefficients_flag',1,...
-    'track_nearfield_iterations_flag',1,...
-    'calculate_near_field_flag',0,...  
-    'calculate_t_matrix_flag', 0,...   
-    'azimuth_average_scattering_matrix_flag',0};
-
-mstm_input_params = struct{...
-    'number_spheres', Nsphere,... 
-    'length_scale_factor', k,...
-    'real_ref_index_scale_factor', 1,...
-    'imag_ref_index_scale_factor',1,...
-    'real_chiral_factor', 0,...
-    'imag_chiral_factor', 0,...
-    'medium_real_ref_index',real(m_medium),...
-    'medium_imag_ref_index',imag(m_medium),...
-    'medium_real_chiral_factor',0,...
-    'medium_imag_chiral_factor',0,...
-    'mie_epsilon', 10^-6,...
-    'translation_epsilon', 10^-6,...
-    'solution_epsilon', 10^-6,...
-    'max_number_iterations', 10^5,...
-    'plane_wave_epsilon',10^-6,...
-    't_matrix_convergence_epsilon',10^-6,...    
-    'sm_number_processors', 1000,...
-    'iterations_per_correction', 20,...
-    'incident_or_target_frame', 0,... 
-    'gaussian_beam_width', beam_width,...
-    'beam_type', beam_type,...
-    'incident_azimuth_angle_deg', alpha,...
-    'incident_polar_angle_deg', beta,...
-    'near_field_plane_coord',2,...
-    'near_field_plane_position',0,...
-    'near_field_plane_vertices',near_field_cords,...
-    'spacial_step_size',near_field_resolution,...
-    'polarization_angle_deg',pol,...
-    'near_field_output_data',2};
+% Run one parallelized simulation at a time
+for idx = 1:length(fname)
+    % Run MSTM code (Specify number of cores here)
+    command{idx} = ['/usr/lib64/openmpi/bin/mpirun -n 4 ./mstm_parallel_ubuntu.out ',fname{idx},'.inp'];
+    [status,cmdout] = system(command{idx},'-echo');
+    %[status,cmdout] = system(command{idx});
+end
 
 
 
-
-
-
-
+% %[status,cmdout] = system(command,'-echo');
+% [status,cmdout] = system(command{idx});
+% 
+% 
+% 
+% 
+% 
+% % Run multiple parallelized simulation at a time
+% commands = [];
+% for idx = 1:length(fname)
+%     % Run MSTM code (Specify number of cores here)
+%     command = ['/usr/lib64/openmpi/bin/mpirun -n 10 ./mstm_parallel_ubuntu.out ',fname{idx},'.inp'];
+%     if idx > 1
+%     dummy = [commands, ' && ',command];
+%         if mod(idx,
+%     %[status,cmdout] = system(command,'-echo');
+%     [status,cmdout] = system(command);
+% end
+% 
+% 
+% 
 
 
