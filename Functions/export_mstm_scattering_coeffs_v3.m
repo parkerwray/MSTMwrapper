@@ -112,7 +112,9 @@ traditional "TE" and "TM" w.r.t. the incident k-vector.
 
 % Convert coeffs to incident k-vector TE-TM basis.
 for idx = 1:(i)
-   for idx2 = 1:sphere(i).Nsphere_order
+    
+    
+   for idx2 = 1:sphere(idx).Nsphere_order
 
         sphere(idx).a_te{idx2} = 0.5.*(sphere(idx).a_te_LR{idx2} + sphere(idx).a_tm_LR{idx2}); 
         sphere(idx).a_tm{idx2} = 0.5.*(sphere(idx).a_te_LR{idx2} - sphere(idx).a_tm_LR{idx2}); 

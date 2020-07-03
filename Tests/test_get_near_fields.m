@@ -3,9 +3,9 @@
 %% Get near field data
 % clear
 % clc
-%if ~exist('File_NF')
+% if ~exist('File_NF')
 %     [File_NF, FileName, PathName] = get_file();
-%end
+% end
 fid = fopen(File_NF,'r');
 
 line = 1;
@@ -64,11 +64,13 @@ E(:,:,3) = reshape(Ez, NB, NA);
 
 %
 E2 = vecnorm(E,2,3); %Take p=2 norm in 3rd dimension
-lda = 700;
+lda = wavelengths;
 k = 2.*pi./lda;
 figure, 
+hold on 
 imagesc((kA./k).*10^(-3), (kB/k).*10^(-3), (E2).^2)
 %contourf((KA./k).*10^(-3), (KB./k).*10^(-3), log10(E2), 200, 'edgecolor','none')
+circle(0,0,22)
 xlabel('Z (um)')
 ylabel('X (um)')
 colormap('jet')
@@ -77,6 +79,40 @@ h = colorbar;
 ylabel(h, '(|E_T|/|E_o|)')
 set(gca, 'FontSize', 24)
 pbaspect([1 1 1])
+
+
+
+
+
+
+
+
+
+
+vec = r3-r1-0.2;
+
+
+function circle(x,y,r)
+%x and y are the coordinates of the center of the circle
+%r is the radius of the circle
+%0.01 is the angle step, bigger values will draw the circle faster but
+%you might notice imperfections (not very smooth)
+ang=0:0.01:2*pi; 
+xp=r*cos(ang);
+yp=r*sin(ang);
+plot(x+xp,y+yp,'w','LineWidth', 2);
+end
+
+
+
+
+
+
+
+
+
+
+
 
 % %%
 % figure, 

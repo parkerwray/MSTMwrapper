@@ -30,23 +30,23 @@ mstm_flags = struct('write_sphere_data', 1,...
 
 %% Define parameters for solution convergence
 convergence = struct(...
-    'mie_epsilon', 10^-6,...
-    'translation_epsilon', 10^-6,...
-    'solution_epsilon', 10^-6,...
+    'mie_epsilon', 10^-9,...
+    'translation_epsilon', 10^-9,...
+    'solution_epsilon', 10^-9,...
     'max_number_iterations', 100000,...
-    'plane_wave_epsilon',10^-6,...
-    't_matrix_convergence_epsilon',10^-6,...    
+    'plane_wave_epsilon',10^-9,...
+    't_matrix_convergence_epsilon',10^-9,...    
     'sm_number_processors', 1000,...
-    'iterations_per_correction', 20);
+    'iterations_per_correction', 30);
 
 %% Define parameters for the input beam.
 input_beam = struct(...
     'incident_or_target_frame', 0,... 
     'gaussian_beam_width', [],...
     'beam_type', 0,... % 0 = plane wave, 1 = Gaussian beam
-    'incident_azimuth_angle_deg', 0,... % Alpha
-    'incident_polar_angle_deg', 0,... % Beta
-    'polarization_angle_deg',0); % Gamma
+    'incident_azimuth_angle_deg', 0,... % Alpha (Azimuth Direction)
+    'incident_polar_angle_deg', 0,... % Beta (Zenith Direction)
+    'polarization_angle_deg',0); % Gamma (Polarization Direction)
 
 %% Define parameters for near field calculations
 near_field = struct(...
@@ -83,6 +83,9 @@ Output:
 %}
 wavelengths = 500;
 spheres = Dual_Sphere_Anisotropic_Kerker_20_06_23(wavelengths);
+
+
+
 mstm_input_params.Nspheres = size(spheres,1);
 %% SIMULATION EXCITATION WAVE PARAMETERS
 
@@ -101,7 +104,7 @@ end
 %% GENERATE MSTM SIMULATION FILES TO RUN
 %%
 
-input_angle = 0:5:180;
+input_angle = 0:1:180;
 % LOOP OVER PARAMETERS YOU WANT TO SWEEP
 for idx = 1:length(input_angle)
     input_beam.incident_polar_angle_deg = input_angle(idx);
@@ -162,6 +165,11 @@ for idx = 1:length(fname)
         m_med(idx), Nspheres(idx), Nequs(idx)] =...
         export_mstm_scattering_coeffs_v3(strcat(filename,'_scat_coeffs.dat'));
 end
+
+cluster = horzcat(cluster_data{:}).';
+excitation = horzcat(excitation_data{:}).';
+sphere_coeff = squeeze(cat(3, sphere_coeff_data{:}));
+
 
 oldFolder = cd(parentdir);
 if SAVE_FLAG == 1
