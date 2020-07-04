@@ -1,4 +1,4 @@
-function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff_desired, r_mean, r_sigma)
+function spheres = example_sphere_function(type, dimension, ff_desired, r_mean, r_sigma)
 
 %{
     I think it is better to have isolated/modularized functions that
@@ -18,10 +18,11 @@ scale = 10;
 r = r_mean;
 sigma = r_sigma;
 distr = @(~) random('normal', r, sigma);
+% ff = 0.1;
 
 margin = 0.01;
 
-bounds = [5,5,1]; 
+bounds = [2,2,2]; 
 giggles = 100;
 tic;
 if strcmp(type, "sphere") == 1
