@@ -1,6 +1,18 @@
-function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff_desired, r_mean, r_sigma)
+function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud)
 
 %{
+    This function randomly places spheres in a 2D or 3D geomeery where the
+    center particle is deterministically placed at the origin and has a
+    deterministically (user set) radius.
+
+    The dirstibution of particle radius is set to a normal distribution.
+    The distribution of particle placement is set by a uniform
+    distribution.
+
+    This code has been tested for bugs and has multiple self consistency
+    checks implemented at runtime. If an error is caught, the code goes
+    into debug mode at that locaiton. 
+
     I think it is better to have isolated/modularized functions that
     generate spheres for a particular goal. These functions can be
     independently tested then ported to be used in the electromagnetic
@@ -12,21 +24,18 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(typ
 % test_fcc; % Pass
 % test_flips; % Pass
 % test_make_random_v2; % Pass
-% dimension = 2;
-% type = "sphere";
-scale = 10;
+
+
+scale = 1; % Is there a computational improvement in changing the scale? -Parker
 r = r_mean;
 sigma = r_sigma;
 distr = @(~) random('normal', r, sigma);
-
 margin = 0.01;
 
-bounds = [5,5,1]; 
-giggles = 100;
 tic;
 if strcmp(type, "sphere") == 1
-    [radii, ff, Nspheres] = get_radii_and_ff_in_sphere(scale, r, ff_desired, ...
-        distr, margin, dimension);
+    [radii, ff, Nspheres] = get_radii_and_ff_in_sphere(scale, r, ...
+        center_radius, ff, distr, margin, dimension);
     cords = full_randomize_in_sphere(radii, scale*r, giggles, dimension);
 elseif strcmp(type, "film") == 1
     if dimension == 3
@@ -35,27 +44,28 @@ elseif strcmp(type, "film") == 1
         [cords, bounds, a] = make_fcc_2D(r, bounds);
     end
     [radii, ff, Nspheres] = get_radii_and_ff(bounds, a,...
-        ff_desired, distr, margin, dimension);
+        center_radius, ff, distr, margin, dimension);
     [radii, cords] = full_randomize(cords, radii, bounds.*a, ...
         giggles, dimension);
 else
     disp("Invalid geometry requested."); 
+    keyboard;
 end
-toc;
+
+if loud
 figure, 
 plot_radii(radii); %pass
+end
+
+% WHAT IS THIS FUNCTION?? THE FLAG GOES TO 1?? - Parker
 has_intersections = check_intersection(cords, radii); %pass
-%%
-% clc;
-% lower_bound = bounds(1,:);
-% upper_bound = bounds(2,:);
-% Itop = find_top_view_ff(cords, r, lower_bound, upper_bound);
-% fftop = sum(sum(Itop,1),2)/(size(Itop,1).*size(Itop,2));
-% figure, imagesc(Itop)
-% [Ntouch, ffcalc, is_zero, norm_dist, overlap_idx] = ...
-%     check_touch_ff_orig(cords, ff, r, bounds(1,:), bounds(2,:));
 
-
+% if has_intersections == 1
+%     disp("Failure! Particles have intersections!")
+%     keyboard;
+% end
+%     
+    
 %%
 if strcmp(type, "film") == 1
     make_spheres(cords, radii, bounds(1,:).*a, bounds(2,:).*a);

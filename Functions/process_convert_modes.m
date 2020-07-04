@@ -3,7 +3,7 @@
 function [A, B, Ax, Bx, size_param,...
             Apar, Bpar, Axpar, Bxpar,...
             Aper, Bper, Axper, Bxper] = ...
-                process_convert_modes(sphere_modes_par, sphere_modes_per)
+                process_convert_modes(Max_Order, sphere_modes_par, sphere_modes_per)
 %{ 
 This function converts MSTM modes to Apnm, Bpnm, Axpnm, Bxpnm, where 
 p is size 2, [1 = parallel, 2 = perpendicular]
@@ -36,7 +36,7 @@ if len_lda == 1 && len_sims > 1
     clearvars dummy
 end
 
-Max_Order = 10;    
+%Max_Order = 10;    
 
 Apar= zeros(len_sims, len_lda, Max_Order, Max_Order+1); 
 Bpar= zeros(len_sims, len_lda, Max_Order, Max_Order+1); 
