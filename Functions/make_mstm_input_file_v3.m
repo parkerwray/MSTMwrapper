@@ -40,7 +40,8 @@ fprintf(fid,strcat(outputfilename,'.dat\n'));
 fprintf(fid,'append_output_file\n');
 fprintf(fid,'0\n');
 fprintf(fid, 'run_print_file\n');
-fprintf(fid, '\n');
+fprintf(fid,strcat(outputfilename,'_intermediate.dat\n'));
+%fprintf(fid, '\n');
 
 
 % Refractive index things
