@@ -25,7 +25,6 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(typ
 % test_flips; % Pass
 % test_make_random_v2; % Pass
 
-
 scale = 1; % Is there a computational improvement in changing the scale? -Parker
 r = r_mean;
 sigma = r_sigma;
@@ -35,18 +34,18 @@ margin = 0.01;
 tic;
 if strcmp(type, "sphere") == 1
     [radii, ff, Nspheres] = get_radii_and_ff_in_sphere(scale, r, ...
-        center_radius, ff, distr, margin, dimension);
-    cords = full_randomize_in_sphere(radii, scale*r, giggles, dimension);
+        center_radius, ff, distr, margin, dimension, loud);
+    cords = full_randomize_in_sphere(radii, scale*r, giggles, dimension, loud);
 elseif strcmp(type, "film") == 1
     if dimension == 3
-        [cords, bounds, a] = make_fcc_3D(r, bounds);
+        [cords, bounds, a] = make_fcc_3D(r, bounds, loud);
     else
-        [cords, bounds, a] = make_fcc_2D(r, bounds);
+        [cords, bounds, a] = make_fcc_2D(r, bounds, loud);
     end
     [radii, ff, Nspheres] = get_radii_and_ff(bounds, a,...
-        center_radius, ff, distr, margin, dimension);
+        center_radius, ff, distr, margin, dimension, loud);
     [radii, cords] = full_randomize(cords, radii, bounds.*a, ...
-        giggles, dimension);
+        giggles, dimension, loud);
 else
     disp("Invalid geometry requested."); 
     keyboard;
@@ -58,7 +57,7 @@ plot_radii(radii); %pass
 end
 
 % WHAT IS THIS FUNCTION?? THE FLAG GOES TO 1?? - Parker
-has_intersections = check_intersection(cords, radii); %pass
+%has_intersections = check_intersection(cords, radii); %pass
 
 % if has_intersections == 1
 %     disp("Failure! Particles have intersections!")
@@ -67,6 +66,7 @@ has_intersections = check_intersection(cords, radii); %pass
 %     
     
 %%
+if loud
 if strcmp(type, "film") == 1
     make_spheres(cords, radii, bounds(1,:).*a, bounds(2,:).*a);
     disp('Simulation region:')
@@ -78,7 +78,7 @@ elseif strcmp(type, "sphere") == 1
     disp(['Cluster diameter: ',num2str((2*scale*r))])
     %make_spheres(cords, radii, [-1000,-1000,-1000], [1000,1000,1000]);
 end
-
+end
 spheres = [radii, cords];
 
 
