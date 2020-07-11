@@ -94,22 +94,22 @@ Bxper= zeros(len_sims, len_lda, Max_Order, Max_Order+1);
 % Get Perpendicular Modes
     for idx_sims = 1:len_sims
         for idx_lda = 1:len_lda
-            Nmax = sphere_modes_par{idx_lda,idx_sims}.Nsphere_order;
+            Nmax = sphere_modes_per{idx_lda,idx_sims}.Nsphere_order;
             
             % Old code used "ka" for size parameter instead of "x". 
             % Account for both styles with a logic statement. 
 
-            if isfield(sphere_modes_par{idx_lda,idx_sims}(1),'x')
-                if ~isempty(sphere_modes_par{idx_lda,idx_sims}(1).x)
+            if isfield(sphere_modes_per{idx_lda,idx_sims}(1),'x')
+                if ~isempty(sphere_modes_per{idx_lda,idx_sims}(1).x)
                 size_param(idx_lda) =...
-                    sphere_modes_par{idx_lda,idx_sims}(1).x;
+                    sphere_modes_per{idx_lda,idx_sims}(1).x;
                 end
             end
             
-            if isfield(sphere_modes_par{idx_lda,idx_sims}(1),'ka')
-                if ~isempty(sphere_modes_par{idx_lda,idx_sims}(1).ka)
+            if isfield(sphere_modes_per{idx_lda,idx_sims}(1),'ka')
+                if ~isempty(sphere_modes_per{idx_lda,idx_sims}(1).ka)
                 size_param(idx_lda) =...
-                    sphere_modes_par{idx_lda,idx_sims}(1).ka;
+                    sphere_modes_per{idx_lda,idx_sims}(1).ka;
                 end
             end
 
@@ -166,9 +166,12 @@ Ax = [];
 Bx = [];
 
         orig = modes(1); % Grab the sphere at the origin data
+        %try
         modes_a_par = orig.a_te{n};
         modes_b_par = orig.a_tm{n};
-
+        %catch
+        %    keyboard;
+        %end
         %Sort Coeffs
         m = (-n:1:n);
         A_neg_m_n = [];
