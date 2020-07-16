@@ -1,4 +1,5 @@
-function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud)
+function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(...
+    type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud, distr)
 
 %{
     This function randomly places spheres in a 2D or 3D geomeery where the
@@ -24,11 +25,13 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(typ
 % test_fcc; % Pass
 % test_flips; % Pass
 % test_make_random_v2; % Pass
-
+if nargin < 10
+   distr = @(~) random('normal', r_mean, r_sigma); 
+end
 scale = 1; % Is there a computational improvement in changing the scale? -Parker
 r = r_mean;
-sigma = r_sigma;
-distr = @(~) random('normal', r, sigma);
+%sigma = r_sigma;
+%distr = @(~) random('normal', r, sigma);
 margin = 0.01;
 
 tic;
