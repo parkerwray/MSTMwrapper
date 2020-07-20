@@ -1,4 +1,4 @@
-function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud)
+function [spheres, ff, bounds] = randomly_placed_normally_distributed_kerker_spheres(type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud)
 
 %{
     This function randomly places spheres in a 2D or 3D geomeery where the
@@ -82,6 +82,6 @@ end
 end
 spheres = [radii, cords];
 
-
+bounds = bounds.*a;
 
 end
