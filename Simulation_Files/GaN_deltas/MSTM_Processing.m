@@ -91,13 +91,7 @@ for counter = 1:L1*L2*L3*L4
    
 end
 clearvars A0 B0 Ax0 Bx0 Iper0 Ipar0
-%% Save files
-%Save As
-%Save Is
-%Save qs
-%save spheres.distribution
-%Save basic params
-%Save stats
+
 %% GET MODE STATISTICS
 
 
@@ -135,6 +129,47 @@ Astats.energy = get_range(Astats.mean.mag,dim_wavelengths);
 Bstats.energy = get_range(Bstats.mean.mag,dim_wavelengths);
 Axstats.energy = get_range(Axstats.mean.mag,dim_wavelengths);
 Bxstats.energy = get_range(Bxstats.mean.mag,dim_wavelengths);
+
+% Get average and standard deviation of particle efficiency.
+[qestats] = get_statistics(qe, dim_Ndistributions);
+[qatats] = get_statistics(qa, dim_Ndistributions);
+[qsistats] = get_statistics(qsi, dim_Ndistributions);
+[qsdstats] = get_statistics(qsd, dim_Ndistributions);
+
+
+%% Save files
+%Save As
+%Save Is
+%Save qs
+%save spheres.distribution
+%Save basic params
+%Save stats
+
+old_location = cd(parentdir);
+mkdir('A_saved_data');
+save('modes.mat','A','B','Ax','Bx', '-v7.3');
+save('Is.mat', 'Ipar', 'Iper', '-v7.3');
+save('qs.mat', 'qe','qa','qsi','qsd','-v7.3');
+save('sphere_distributions','-v7.3');
+save('simulation_parameters', 'ff','-v7.3');    % UPDATE THIS LINE WITH THE RELEVANT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+save('modes_stats.mat','Astats','Bstats','Axstats','Bxstats','-v7.3');
+save('qs_stats.mat','qestats','qastats','qsistats','qsdstats','-v7.3');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 %% PLOT MAGNITUDES AND PHASES
 % % 
