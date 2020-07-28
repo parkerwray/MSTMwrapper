@@ -48,15 +48,15 @@ Rideal(idxmin:idxmax) = 1;
 
 Tideal = ones(size(wavelengths));
 [idxmin, idxmax] = get_box(300, 400, wavelengths);
-Tideal(idxmin:idxmax) = 1;
-[idxmin, idxmax] = get_box(400, 500, wavelengths);
-Tideal(idxmin:idxmax) = 1;
-[idxmin, idxmax] = get_box(500, 600, wavelengths);
 Tideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(400, 500, wavelengths);
+Tideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(500, 600, wavelengths);
+Tideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(600, 700, wavelengths);
 Tideal(idxmin:idxmax) = 0;
 [idxmin, idxmax] = get_box(700, 800, wavelengths);
-Tideal(idxmin:idxmax) = 1;
+Tideal(idxmin:idxmax) = 0;
 
 
 
@@ -83,7 +83,7 @@ beq = 1;
 w = fmincon(f,w0,[],[],Aeq,beq,lb,ub);
 
 
-Ropt = get_R(w,ff,Escat, Escat0, Escat180);
+Opt = Param(w);
 norm(Ropt).^2;
 
 %%
@@ -105,27 +105,25 @@ pbaspect([1 1 1])
 box on 
 set(gca, 'FontSize', sizef)
 
-Rorig = get_R(w0,ff,Escat, Escat0, Escat180);
+
 subplot(2,3,2)
-plot(lda, 100.*Rorig, 'LineWidth', 6)
+plot(lda, 100.*T(w0), 'LineWidth', 6)
 hold on 
-plot(lda, 100.*Ropt, 'LineWidth', 6)
-plot(lda, 100.*Rideal, 'LineWidth', 6)
+plot(lda, 100.*T(w), 'LineWidth', 6)
+plot(lda, 100.*Tideal, 'LineWidth', 6)
 hold off
 legend('Original','Optimized','Ideal')
 xlim([min(lda), max(lda)])
-ylabel('Reflection (%)') 
-title('Film reflection')
+ylabel('Transmission (%)') 
+title('Film transmission')
 pbaspect([1 1 1])
 box on 
 set(gca, 'FontSize', sizef)
 
-Aorig = get_A(w0,ff,Eabs);
-Aopt = get_A(w,ff,Eabs);
 subplot(2,3,3)
-plot(lda, 100.*Aorig, 'LineWidth', 6)
+plot(lda, 100.*A(w0), 'LineWidth', 6)
 hold on 
-plot(lda, 100.*Aopt, 'LineWidth', 6)
+plot(lda, 100.*A(w), 'LineWidth', 6)
 hold off
 legend('Original','Optimized')
 xlim([min(lda), max(lda)])

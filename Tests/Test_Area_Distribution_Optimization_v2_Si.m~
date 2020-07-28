@@ -34,21 +34,45 @@ FBR = Escat0./Escat180;
 
 Rideal = zeros(size(wavelengths));
 [idxmin, idxmax] = get_box(300, 400, wavelengths);
-Rideal(idxmin:idxmax) = 0.0;
+Rideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(400, 500, wavelengths);
-Rideal(idxmin:idxmax) = 0.25;
+Rideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(500, 600, wavelengths);
-Rideal(idxmin:idxmax) = 0.5;
+Rideal(idxmin:idxmax) = 0;
 [idxmin, idxmax] = get_box(600, 700, wavelengths);
-Rideal(idxmin:idxmax) = 0.25;
+Rideal(idxmin:idxmax) = 0;
 [idxmin, idxmax] = get_box(700, 800, wavelengths);
-Rideal(idxmin:idxmax) = 0.0;
+Rideal(idxmin:idxmax) = 1;
+
+
+
+Tideal = ones(size(wavelengths));
+[idxmin, idxmax] = get_box(300, 400, wavelengths);
+Tideal(idxmin:idxmax) = 1;
+[idxmin, idxmax] = get_box(400, 500, wavelengths);
+Tideal(idxmin:idxmax) = 1;
+[idxmin, idxmax] = get_box(500, 600, wavelengths);
+Tideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(600, 700, wavelengths);
+Tideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(700, 800, wavelengths);
+Tideal(idxmin:idxmax) = 1;
+
+
+
+
 % [idxmin, idxmax] = get_box(600, 700, wavelengths);
 % Rideal(idxmin:idxmax) = 1;
 
-%R = @(w)norm(get_R(w,ff,Escat, Escat0, Escat180)+get_A(w,ff,Eabs)).^2;
-R = @(w)norm(abs(Rideal-get_R(w,ff,Escat, Escat0, Escat180))).^2;
-%nonlcon = @(w)PMF_constraints(w);
+R = @(w)get_R(w,ff,Escat, Escat0, Escat180);
+A = @(w)get_A(w,ff,Eabs);
+T = @(w)(1-get_R(w,ff,Escat, Escat0, Escat180)-get_A(w,ff,Eabs));
+
+Ideal = Tideal;
+Param = T;
+
+f = @(w)norm(Ideal - Param(w)).^2;
+
 
 w0 = ones(size(center_radiis))./length(center_radiis);
 lb = zeros(size(w0));
@@ -56,13 +80,16 @@ ub = ones(size(w0));
 Aeq = ones(size(w0));
 beq = 1;
 
-w = fmincon(R,w0,[],[],Aeq,beq,lb,ub);
+w = fmincon(f,w0,[],[],Aeq,beq,lb,ub);
 
 
-Ropt = get_R(w,ff,Escat, Escat0, Escat180);
+Opt = Param(w);
 norm(Ropt).^2;
 
 %%
+
+sizef = 20;
+
 
 figure, 
 subplot(2,3,1)
@@ -71,64 +98,81 @@ bar(center_radiis, w0)
 bar(center_radiis, w)
 hold off
 legend('Original', 'Optimized')
-title('Distribution')
+ylabel('Probability')
+title('Area distribution')
 lda = wavelengths(idxlda);
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
-
+Rorig = get_R(w0,ff,Escat, Escat0, Escat180);
 subplot(2,3,2)
+plot(lda, 100.*Rorig, 'LineWidth', 6)
 hold on 
-for idx = 1:length(center_radiis)
-    plot(lda, log10(FBR(:,idx)))
-end
+plot(lda, 100.*Ropt, 'LineWidth', 6)
+plot(lda, 100.*Rideal, 'LineWidth', 6)
 hold off
+legend('Original','Optimized','Ideal')
 xlim([min(lda), max(lda)])
-title('FBRs')
+ylabel('Reflection (%)') 
+title('Film reflection')
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
+Aorig = get_A(w0,ff,Eabs);
+Aopt = get_A(w,ff,Eabs);
 subplot(2,3,3)
+plot(lda, 100.*Aorig, 'LineWidth', 6)
 hold on 
-for idx = 1:length(center_radiis)
-    plot(lda, Escat(:,idx))
-end
+plot(lda, 100.*Aopt, 'LineWidth', 6)
 hold off
+legend('Original','Optimized')
 xlim([min(lda), max(lda)])
-title('Scattering Efficiency')
+ylabel('Absorption (%)')
+title('Film absorption')
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
 subplot(2,3,4)
 hold on 
 for idx = 1:length(center_radiis)
-    plot(lda, Eabs(:,idx))
+    plot(lda, log10(FBR(:,idx)), 'LineWidth', 6)
 end
 hold off
 xlim([min(lda), max(lda)])
-title('Absorption Efficiency')
+ylabel('Log_{10} forward-to-backward ratio')
+title('Isolated particle')
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
-
-Rorig = get_R(w0,ff,Escat, Escat0, Escat180);
 subplot(2,3,5)
-plot(lda, 100.*Rorig)
 hold on 
-plot(lda, 100.*Ropt)
-plo
+for idx = 1:length(center_radiis)
+    plot(lda, Escat(:,idx), 'LineWidth', 6)
+end
 hold off
-legend('Original','Optimized')
 xlim([min(lda), max(lda)])
-title('Reflection')
+ylabel('Scattering efficiency')
+title('Isolated particle')
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
-
-Aorig = get_A(w0,ff,Eabs);
-Aopt = get_A(w,ff,Eabs);
 subplot(2,3,6)
-plot(lda, 100.*Aorig)
 hold on 
-plot(lda, 100.*Aopt)
+for idx = 1:length(center_radiis)
+    plot(lda, Eabs(:,idx), 'LineWidth', 6)
+end
 hold off
-legend('Original','Optimized')
 xlim([min(lda), max(lda)])
-title('Aborption')
-
-
-
-
+ylabel('Absorption efficiency')
+title('Isolated particle')
+pbaspect([1 1 1])
+box on 
+set(gca, 'FontSize', sizef)
 
 
 

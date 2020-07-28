@@ -8,11 +8,11 @@
 
 clc
 clearvars Escat Escat0 Escat180
-ff = 0.3;
-%[~,idxff] = (min(abs(fill_fractions - ff)));
-idxff = 1;
-ldamin = 300;
-ldamax = 800;
+ff = 0.1;
+[~,idxff] = (min(abs(fill_fractions - ff)));
+
+ldamin = 500;
+ldamax = 900;
 [~,idxldamin] = min(abs(wavelengths-ldamin));
 [~,idxldamax] = min(abs(wavelengths-ldamax));
 idxlda = idxldamin:idxldamax;
@@ -33,46 +33,30 @@ FBR = Escat0./Escat180;
 
 
 Rideal = zeros(size(wavelengths));
-[idxmin, idxmax] = get_box(300, 400, wavelengths);
-Rideal(idxmin:idxmax) = 1;
-[idxmin, idxmax] = get_box(400, 500, wavelengths);
-Rideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(500, 600, wavelengths);
-Rideal(idxmin:idxmax) = 0;
+Rideal(idxmin:idxmax) = 0.0;
 [idxmin, idxmax] = get_box(600, 700, wavelengths);
-Rideal(idxmin:idxmax) = 0;
+Rideal(idxmin:idxmax) = 0.0;
 [idxmin, idxmax] = get_box(700, 800, wavelengths);
-Rideal(idxmin:idxmax) = 1;
-
-
+Rideal(idxmin:idxmax) = 0.0;
+[idxmin, idxmax] = get_box(800, 900, wavelengths);
+Rideal(idxmin:idxmax) = 0.0;
 
 Tideal = ones(size(wavelengths));
-[idxmin, idxmax] = get_box(300, 400, wavelengths);
-Tideal(idxmin:idxmax) = 1;
-[idxmin, idxmax] = get_box(400, 500, wavelengths);
-Tideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(500, 600, wavelengths);
-Tideal(idxmin:idxmax) = 0;
+Tideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(600, 700, wavelengths);
-Tideal(idxmin:idxmax) = 0;
+Tideal(idxmin:idxmax) = 1;
 [idxmin, idxmax] = get_box(700, 800, wavelengths);
 Tideal(idxmin:idxmax) = 1;
+[idxmin, idxmax] = get_box(800, 900, wavelengths);
+Tideal(idxmin:idxmax) = 1;
 
-
-
-
-% [idxmin, idxmax] = get_box(600, 700, wavelengths);
-% Rideal(idxmin:idxmax) = 1;
-
-R = @(w)get_R(w,ff,Escat, Escat0, Escat180);
-A = @(w)get_A(w,ff,Eabs);
-T = @(w)(1-get_R(w,ff,Escat, Escat0, Escat180)-get_A(w,ff,Eabs));
-
-Ideal = Tideal;
-Param = T;
-
-f = @(w)norm(Ideal - Param(w)).^2;
-
+%Tideal = ones(size(wavelengths));
+Aideal = 1-Tideal-Rideal;
+R = @(w)norm((Rideal-get_R(w,ff,Escat, Escat0, Escat180))+(Aideal-get_A(w,ff,Eabs))).^2;
+%R = @(w)norm(abs(Rideal-get_R(w,ff,Escat, Escat0, Escat180))).^2;
+%nonlcon = @(w)PMF_constraints(w);
 
 w0 = ones(size(center_radiis))./length(center_radiis);
 lb = zeros(size(w0));
@@ -80,7 +64,7 @@ ub = ones(size(w0));
 Aeq = ones(size(w0));
 beq = 1;
 
-w = fmincon(f,w0,[],[],Aeq,beq,lb,ub);
+w = fmincon(R,w0,[],[],Aeq,beq,lb,ub);
 
 
 Ropt = get_R(w,ff,Escat, Escat0, Escat180);
@@ -126,8 +110,9 @@ subplot(2,3,3)
 plot(lda, 100.*Aorig, 'LineWidth', 6)
 hold on 
 plot(lda, 100.*Aopt, 'LineWidth', 6)
+plot(lda, 100.*Aideal, 'LineWidth', 6)
 hold off
-legend('Original','Optimized')
+legend('Original','Optimized', 'Ideal')
 xlim([min(lda), max(lda)])
 ylabel('Absorption (%)')
 title('Film absorption')
@@ -143,7 +128,7 @@ end
 hold off
 xlim([min(lda), max(lda)])
 ylabel('Log_{10} forward-to-backward ratio')
-title('Isolated particle')
+title('Uniform particle')
 pbaspect([1 1 1])
 box on 
 set(gca, 'FontSize', sizef)
@@ -156,7 +141,7 @@ end
 hold off
 xlim([min(lda), max(lda)])
 ylabel('Scattering efficiency')
-title('Isolated particle')
+title('Uniform particle')
 pbaspect([1 1 1])
 box on 
 set(gca, 'FontSize', sizef)
@@ -169,7 +154,7 @@ end
 hold off
 xlim([min(lda), max(lda)])
 ylabel('Absorption efficiency')
-title('Isolated particle')
+title('Uniform particle')
 pbaspect([1 1 1])
 box on 
 set(gca, 'FontSize', sizef)
