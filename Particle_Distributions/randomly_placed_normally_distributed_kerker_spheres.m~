@@ -1,5 +1,5 @@
 function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(...
-    type, dimension, ff_desired, center_radius, r_mean, r_sigma, bounds, giggles, loud, distr)
+    type, dimension, ff, center_radius, r_mean, r_sigma, bounds, giggles, loud, distr)
 
 %{
     This function randomly places spheres in a 2D or 3D geomeery where the
@@ -37,7 +37,7 @@ margin = 0.01;
 tic;
 if strcmp(type, "sphere") == 1
     [radii, ff, Nspheres] = get_radii_and_ff_in_sphere(scale, r, ...
-        center_radius, ff_desired, distr, margin, dimension, loud);
+        center_radius, ff, distr, margin, dimension, loud);
     cords = full_randomize_in_sphere(radii, scale*r, giggles, dimension, loud);
 elseif strcmp(type, "film") == 1
     if dimension == 3
@@ -46,9 +46,9 @@ elseif strcmp(type, "film") == 1
         [cords, bounds, a] = make_fcc_2D(r, bounds, loud);
     end
     [radii, ff, Nspheres] = get_radii_and_ff(bounds, a,...
-        center_radius, ff_desired, distr, margin, dimension, loud);
+        center_radius, ff, distr, margin, dimension, loud);
     [radii, cords] = full_randomize_v2(cords, radii, bounds.*a, ...
-        giggles, dimension, ff_desired, margin, loud);
+        giggles, dimension, ffloud);
 else
     disp("Invalid geometry requested."); 
     keyboard;
