@@ -31,7 +31,7 @@ FBR = Escat0./Escat180;
 %%
 %R = @(w)norm(get_R(w,ff,Escat, Escat0, Escat180)+get_A(w,Eabs)).^2;
 
-R = @(w)norm(abs(0.3-get_R(w,ff,Escat, Escat0, Escat180))).^2;
+R = @(w)norm(abs(0.0-get_R(w,ff,Escat, Escat0, Escat180))).^2;
 %nonlcon = @(w)PMF_constraints(w);
 
 w0 = [1, 1, 1, 1, 1]./5;

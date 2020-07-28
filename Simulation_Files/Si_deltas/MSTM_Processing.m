@@ -2,18 +2,20 @@
 % % 
 % %% SPECIFY RELEVANT DIRECTORIES 
 
-% Paths to import programs.
-addpath(genpath('/home/elipaul/hypnos/codes/MSTMwrapper')); 
-addpath(genpath('/home/elipaul/hypnos/codes/Matlab Functions'));  
-addpath(genpath('/home/elipaul/hypnos/codes/randomparticles'));  
+core = '/home/elipaul';
+addpath(genpath(strcat(core, '/hypnos/Codes/MSTMwrapper'))); % Keep these the same
+addpath(genpath(strcat(core,'/hypnos/Codes/Matlab Functions')));  % Keep these the same
+addpath(genpath(strcat(core,'/hypnos/Codes/randomparticles')));  % Keep these the same
+
 
 % Location of the fortran compiled run program for MSTM code.
-mstm_location = '/home/elipaul/hypnos/Codes/MSTMwrapper/mstm_parallel_ubuntu.out';
+mstm_location = strcat(core,'/hypnos/Codes/MSTMwrapper/mstm_parallel_ubuntu.out');
+mstm_location_serial = strcat(core,'/hypnos/Codes/MSTMwrapper/mstm_serial_ubuntu.exe');
 
 % Specify the directory where you will place input and output files for
 % communicating with the MSTM fortran program. Save files will also go to
 % this location. 
-parentdir = uigetdir('/home/elipaul/hypnos',' Specify Save Directory'); % for Linux
+parentdir = uigetdir(core,' Specify Save Directory'); % for Linux
 %parentdir = uigetdir('$ME','Specify Save Directory'); % for NERSC
 
 % Change directory to location where input/output files are saved
@@ -25,8 +27,23 @@ oldFolder = cd(parentdir);
 clearvars A B Ax Bx size_param sphere_coffs_par sphere_coeffs_per Ipar Iper
 max_order = 10;
 theta = [0, pi];
-
-parfor counter = 1:L1*L2*L3*L4
+A = zeros(L1, L2, L3, L4, L5, max_order, max_order + 1);
+B = zeros(L1, L2, L3, L4, L5, max_order, max_order + 1);
+Ax = zeros(L1, L2, L3, L4, L5, max_order, max_order + 1);
+Bx = zeros(L1, L2, L3, L4, L5, max_order, max_order + 1);
+Iper = zeros(L1, L2, L3, L4, L5);
+Ipar = zeros(L1, L2, L3, L4, L5);
+A0 = zeros(L1*L2*L3*L4, L5, max_order, max_order+1);
+Ax0 = zeros(L1*L2*L3*L4, L5, max_order, max_order+1);
+B0 = zeros(L1*L2*L3*L4, L5, max_order, max_order+1);
+Bx0 = zeros(L1*L2*L3*L4, L5, max_order, max_order+1);
+Iper0 = zeros(L1*L2*L3*L4, L5);
+Ipar0 = zeros(L1*L2*L3*L4, L5);
+qe = zeros(L1, L2, L3, L4);
+qa = zeros(L1, L2, L3, L4);
+qsi = zeros(L1, L2, L3, L4);
+qsd = zeros(L1, L2, L3, L4);
+parfor (counter = 1:L1*L2*L3*L4, 10)
     if mod(counter, 1000) == 0
         disp(counter);
         
@@ -49,14 +66,31 @@ parfor counter = 1:L1*L2*L3*L4
         sphere_coeffs_par = squeeze(sphere_coeffs_data(1));
         sphere_coeffs_per = squeeze(sphere_coeffs_data(2));
         
-        [A(counter,:, :, :), B(counter,:, :, :),...
-            Ax(counter, :, :, :), Bx(counter, :, :, :), size_param] = ...
+        [A0(counter,:, :, :), B0(counter,:, :, :),...
+            Ax0(counter, :, :, :), Bx0(counter, :, :, :), size_param] = ...
                     process_convert_modes_v2(max_order, sphere_coeffs_par.', sphere_coeffs_per.');
           
-        [Ipar(counter,:), Iper(counter,:)] = make_S_v2(A(counter,:, :, :), B(counter,:, :, :),...
-            Ax(counter,:, :, :), Bx(counter,:, :, :), theta);  
+        [Ipar0(counter,:), Iper0(counter,:)] = make_S_v2(A0(counter,:, :, :), B0(counter,:, :, :),...
+            Ax0(counter,:, :, :), Bx0(counter,:, :, :), theta);  
+        
+        [qe(counter), qa(counter), qsi(counter), qsd(counter)] = get_efficiencies(sphere_coeffs_par);
   
 end
+for counter = 1:L1*L2*L3*L4
+   [idx1, idx2, idx3, idx4] = sub2ind([L1, L2, L3, L4], counter);
+   A(idx1, idx2, idx3, idx4, :, :, :) = A0(counter,:,:,:);
+   B(idx1, idx2, idx3, idx4, :, :, :) = B0(counter,:,:,:);
+   Ax(idx1, idx2, idx3, idx4, :, :, :)= Ax0(counter,:,:,:);
+   Bx(idx1, idx2, idx3, idx4, :, :, :)= Bx0(counter,:,:,:);
+   Ipar(idx1, idx2, idx3, idx4, :) = Ipar0(counter, :);
+   Iper(idx1, idx2, idx3, idx4, :) = Iper0(counter, :);
+   qe(idx1, idx2, idx3, idx4) = qe(counter);
+   qa(idx1, idx2, idx3, idx4) = qa(counter);
+   qsi(idx1, idx2, idx3, idx4)= qsi(counter);
+   qsd(idx1, idx2, idx3, idx4)= qsd(counter);
+   
+end
+clearvars A0 B0 Ax0 Bx0 Iper0 Ipar0
 
 %% GET MODE STATISTICS
 
@@ -95,6 +129,47 @@ Astats.energy = get_range(Astats.mean.mag,dim_wavelengths);
 Bstats.energy = get_range(Bstats.mean.mag,dim_wavelengths);
 Axstats.energy = get_range(Axstats.mean.mag,dim_wavelengths);
 Bxstats.energy = get_range(Bxstats.mean.mag,dim_wavelengths);
+
+% Get average and standard deviation of particle efficiency.
+[qestats] = get_statistics(qe, dim_Ndistributions);
+[qatats] = get_statistics(qa, dim_Ndistributions);
+[qsistats] = get_statistics(qsi, dim_Ndistributions);
+[qsdstats] = get_statistics(qsd, dim_Ndistributions);
+
+
+%% Save files
+%Save As
+%Save Is
+%Save qs
+%save spheres.distribution
+%Save basic params
+%Save stats
+
+old_location = cd(parentdir);
+mkdir('A_saved_data');
+save('modes.mat','A','B','Ax','Bx', '-v7.3');
+save('Is.mat', 'Ipar', 'Iper', '-v7.3');
+save('qs.mat', 'qe','qa','qsi','qsd','-v7.3');
+save('sphere_distributions','-v7.3');
+save('simulation_parameters', 'ff','-v7.3');    % UPDATE THIS LINE WITH THE RELEVANT PARAMETERS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+save('modes_stats.mat','Astats','Bstats','Axstats','Bxstats','-v7.3');
+save('qs_stats.mat','qestats','qastats','qsistats','qsdstats','-v7.3');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 %% PLOT MAGNITUDES AND PHASES
 % % 
