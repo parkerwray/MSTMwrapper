@@ -69,13 +69,13 @@ convergence = struct(...
 % NOTE: near_field_translation_distance is hard coded
 %% Define parameters for the input beam.
 
-% input_beam = struct(...
-%     'incident_or_target_frame', 0,... 
-%     'gaussian_beam_width', [],...
-%     'beam_type', 0,... % 0 = plane wave, 1 = Gaussian beam
-%     'incident_azimuth_angle_deg', 0,... % Alpha
-%     'incident_polar_angle_deg', 0,... % Beta 90 = supression
-%     'polarization_angle_deg',0); % Gamma
+input_beam = struct(...
+    'incident_or_target_frame', 0,... 
+    'gaussian_beam_width', [],...
+    'beam_type', 0,... % 0 = plane wave, 1 = Gaussian beam
+    'incident_azimuth_angle_deg', 0,... % Alpha
+    'incident_polar_angle_deg', 0,... % Beta 90 = supression
+    'polarization_angle_deg',0); % Gamma
 %% Define parameters for near field calculations
 
 near_field = struct(...
@@ -86,19 +86,19 @@ near_field = struct(...
     'near_field_output_data',2);
 %% Define parameters for particle distribution
 
-% mstm_input_params = struct(...
-%     'Nspheres', [],... 
-%     'k',[],... % length_scale_factor 
-%     'real_ref_index_scale_factor', 1,...
-%     'imag_ref_index_scale_factor',1,...
-%     'real_chiral_factor', 0,...
-%     'imag_chiral_factor', 0,...
-%     'medium_real_ref_index',1,...
-%     'medium_imag_ref_index',0,...
-%     'medium_real_chiral_factor',0,...
-%     'medium_imag_chiral_factor',0);
+mstm_input_params = struct(...
+    'Nspheres', [],... 
+    'k',[],... % length_scale_factor 
+    'real_ref_index_scale_factor', 1,...
+    'imag_ref_index_scale_factor',1,...
+    'real_chiral_factor', 0,...
+    'imag_chiral_factor', 0,...
+    'medium_real_ref_index',1,...
+    'medium_imag_ref_index',0,...
+    'medium_real_chiral_factor',0,...
+    'medium_imag_chiral_factor',0);
 %% SPECIFY SWEEP PARAMETERS FOR MSTM TO RUN
-
+polarizations = [0,90];
 k = 2*pi./wavelengths;
 L1 = 1; 
 L2 = 1;
@@ -113,28 +113,28 @@ disp(['Number of simulations: ', num2str(Nsimulations)])
 
 % 
 % % You need to repeat static parameters 
-% mstm_input_params = repmat(mstm_input_params, L1, L2, L3, L4);
-% input_beam = repmat(input_beam, L5);
-% 
-% clearvars spheres ff
-% for idx1 = 1:L1 % Center radiis
-%     for idx2 = 1:L2 % Fill fractions
-%         for idx3 = 1:L3 % Number of distributions
-%             for idx4 = 1:L4 % Wavelengths
-%                 mstm_input_params(idx1, idx2, idx3, idx4).k = k(idx4);       
-%                 mstm_input_params(idx1, idx2, idx3, idx4).Nspheres = size(spheres(idx1, idx2, idx3, idx4).distribution,1);
-%                                            
-%             end
-%         end
-%     end
-% end
-%     
-% for idx5 = 1:L5
-%     % Polarization sweep is not linked to other parameters. Remove from
-%     % the other loop to prevent unnecessary copying. 
-%     input_beam(idx5).incident_azimuth_angle_deg = polarizations(idx5);
-% 
-% end
+mstm_input_params = repmat(mstm_input_params, L1, L2, L3, L4);
+input_beam = repmat(input_beam, L5,1);
+%%
+
+for idx1 = 1:L1 % Center radiis
+    for idx2 = 1:L2 % Fill fractions
+        for idx3 = 1:L3 % Number of distributions
+            for idx4 = 1:L4 % Wavelengths
+                mstm_input_params(idx1, idx2, idx3, idx4).k = k(idx4);       
+                mstm_input_params(idx1, idx2, idx3, idx4).Nspheres = size(spheres(idx1, idx2, idx3, idx4).distribution,1);
+                                           
+            end
+        end
+    end
+end
+%
+for idx5 = 1:L5
+    % Polarization sweep is not linked to other parameters. Remove from
+    % the other loop to prevent unnecessary copying. 
+    input_beam(idx5).incident_azimuth_angle_deg = polarizations(idx5);
+
+end
 
 %% Parallelize the saving of files for MSTM to read.
 % Data is written to text files to be read by the MSTM program. The writing 

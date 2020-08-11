@@ -2,8 +2,15 @@
 clear
 clc
 
+core = '/home/parkerwray';
+%addpath(genpath(strcat(core, '/hypnos/Codes/MSTMwrapper'))); % Keep these the same
+addpath(genpath(strcat(core,'/hypnos/Codes/Matlab Functions')));  % Keep these the same
+%addpath(genpath(strcat(core,'/hypnos/Codes/randomparticles')));  % Keep these the same
+addpath(genpath(strcat(core, '/hypnos/Codes/Matlab_Mie_Core_Shell_Coefficients'))); % Keep these the same
+
+
 x = 0.1:0.002:7;
-m = [2, 3, 4];
+m = [4];
 
 nangsteps = 180;
 opt = 1;
@@ -140,7 +147,7 @@ end
 %% Make the refleciton profile that you want to generate
 
 
-idxm = 3;
+idxm = 1;
 ff = 0.3;
 
 figure, hold on 
@@ -153,14 +160,14 @@ plot(lda/1000, ff.*0.5.*R(:,idxm));
 lda = linspace(ldamin, ldamax, 300);
 % Make desired reflection distribution
 Rideal = zeros(size(lda)).';
-[idxmin, idxmax] = get_box(2000, 3200, lda);
-Rideal(idxmin:idxmax) = 0.5;
-[idxmin, idxmax] = get_box(3200, 3800, lda);
-Rideal(idxmin:idxmax) = 0.02;
-[idxmin, idxmax] = get_box(3800, 5000, lda);
-Rideal(idxmin:idxmax) = 0.5;
+[idxmin, idxmax] = get_box(2000, 3000, lda);
+Rideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(3000, 4000, lda);
+Rideal(idxmin:idxmax) = 0;
+[idxmin, idxmax] = get_box(4000, 5000, lda);
+Rideal(idxmin:idxmax) = 0.8;
 [idxmin, idxmax] = get_box(5000, 6000, lda);
-Rideal(idxmin:idxmax) = 0.5; 
+Rideal(idxmin:idxmax) = 0.8; 
 Rideal = Rideal.*1;
 
 plot(lda/1000, Rideal);
@@ -185,7 +192,7 @@ clearvars lb ub Aeq beq v0
 % Define constraints
 ffmin = 0.1;
 ffmax = 0.4;
-Lparticles = 5;
+Lparticles = 5; %5;
 Lm = length(m);
 
 minimum_radii = [];
@@ -237,18 +244,6 @@ v0 = [ff0; r0; w0];
 size_m = length(m);
 
 lda = linspace(ldamin, ldamax, 300);
-% % Make desired reflection distribution
-% Rideal = zeros(size(lda)).';
-% [idxmin, idxmax] = get_box(2000, 3200, lda);
-% Rideal(idxmin:idxmax) = 1.0;
-% [idxmin, idxmax] = get_box(3200, 3800, lda);
-% Rideal(idxmin:idxmax) = 0.05;
-% [idxmin, idxmax] = get_box(3800, 5000, lda);
-% Rideal(idxmin:idxmax) = 1.0;
-% [idxmin, idxmax] = get_box(5000, 6000, lda);
-% Rideal(idxmin:idxmax) = 1.0; 
-% Rideal = Rideal.*1;
-
 
 [qs_reshaped, If_reshaped, Ib_reshaped] = ...
     reshape_for_Lparticles(Lparticles, Lm, qs, If, Ib);
@@ -271,9 +266,9 @@ plot(lda/1000, R0,':')
 hold off
 xlim([2,6])
 
-%%
+%
 clc
-
+%
 %v0 = vopt;
 % Optimizer options
 options = optimoptions('fmincon');
@@ -282,76 +277,104 @@ options.StepTolerance = 1e-20;
 options.ConstraintTolerance = 1e-20;
 options.OptimalityTolerance = 1e-20;
 options.Display = 'iter-detailed';
-options.MaxIterations = 10000;
-options.MaxFunctionEvaluations = 5000;
+options.MaxIterations = 100000;
+options.MaxFunctionEvaluations = 10000;
 % options.FiniteDifferenceStepSize = (ub-lb)/10;
 % options.DiffMinChange = 0;
 
 tic
 
                 
-%f = @(v)(norm(Rideal-g(v)).^2);
-f = @(v)sum(abs(Rideal-g(v)));                                
+f = @(v)(norm(Rideal-g(v)).^2);
+%f = @(v)sum(abs(Rideal-g(v)));                                
 [vopt, vval] = fmincon(f,v0,[],[],Aeq,beq,lb,ub,[], options);
 toc/60
 
 % Get results of the optimal parameters and plot them vs. the seed. 
 %clc
-plot_v_opt_vs_seed(Lparticles, Lm, vopt, v0);
+%plot_v_opt_vs_seed(Lparticles, Lm, vopt, v0);
 
 
 Ropt = g(vopt);
-%%
-clc
+
 [ffopt, ropt, wopt] = get_parameters(vopt, Lparticles, Lm, minimum_radii, maximum_radii);
 
 %%
+saveflag = 0;
+core = 'Custom2';
 
-figure, 
-%subplot(4,1,1)
-bar(ropt(:,1), wopt(:,1).*100)
+fig = figure; 
+[rs, Is] = sort(ropt(:,1));
+bar(wopt(Is,1).*100)
+xticklabels(num2str(round(rs)))
 ylabel('Probability (%)')
 xlabel('Radius (nm)')
 title(['m = ', num2str(m(1)),'+j0'])
+set(gca,'FontSize',30)
+pbaspect([1,1,1])
+box on 
+set(gcf, 'Position', get(0, 'Screensize'));
+if saveflag
+savefig([core,'_Dist1.fig'])
+saveas(gcf,[core,'_Dist1.tif']) 
+end
+
+if length(m)>1
 figure,
-bar(ropt(:,2), wopt(:,2).*100)
+[rs, Is] = sort(ropt(:,2));
+bar(wopt(Is,2).*100)
+xticklabels(num2str(round(rs)))
 ylabel('Probability (%)')
 xlabel('Radius (nm)')
 title(['m = ', num2str(m(2)),'+j0'])
+set(gca,'FontSize',30)
+pbaspect([1,1,1])
+box on 
+set(gcf, 'Position', get(0, 'Screensize'));
+if saveflag
+savefig([core,'_Dist2.fig'])
+saveas(gcf,[core,'_Dist2.tif']) 
+end
+if length(m)>2
 figure,
-bar(ropt(:,3), wopt(:,3).*100)
+[rs, Is] = sort(ropt(:,3));
+bar(wopt(Is,3).*100)
+xticklabels(num2str(round(rs)))
 ylabel('Probability (%)')
 xlabel('Radius (nm)')
 title(['m = ', num2str(m(3)),'+j0'])
-%%
+set(gca,'FontSize',30)
+pbaspect([1,1,1])
+box on 
+set(gcf, 'Position', get(0, 'Screensize'));
+if saveflag
+savefig([core,'_Dist3.fig'])
+saveas(gcf,[core,'_Dist3.tif']) 
+end
+end
+end
+
 
 figure, 
-% subplot(2,3,1)
-% hold on 
-% bar(center_radiis, w0)
-% bar(center_radiis, w)
-% hold off
-% legend('Original', 'Optimized')
-% ylabel('Probability')
-% title('Area distribution')
-% lda = wavelengths(idxlda);
-% pbaspect([1 1 1])
-% box on 
-% set(gca, 'FontSize', sizef)
-
-
-
-
 hold on 
-plot(lda, 100.*Ropt,'-','LineWidth',6)
-plot(lda, 100.*R0,'-.','LineWidth',6)
-plot(lda, 100.*Rideal,':','LineWidth',6)
+plot(lda/1000, 100.*Ropt,'k-','LineWidth',8)
+plot(lda/1000, 100.*R0,'b-.','LineWidth',8)
+plot(lda/1000, 100.*Rideal,'r:','LineWidth',8)
 hold off
-xlabel('Wavelength')
+xlabel('Wavelength (um)')
 ylabel('Reflection (%)')
-legend('Ropt','R0','Rideal')
-
-
+legend(['Optimized',newline, '(ff = ',num2str(round(ffopt*100)),'%)'],...
+    ['Seed',newline, '(ff = ', num2str(round(ff0*100)), '%)'],...
+    'Target profile')
+legend boxoff
+set(gca,'FontSize',30)
+pbaspect([1,1,1])
+box on 
+set(gcf, 'Position', get(0, 'Screensize'));
+if saveflag
+savefig([core,'_Reflection.fig'])
+saveas(gcf,[core,'_Reflection.tif']) 
+end
 %%
 function r = scale_r(r0, min_r, max_r)
 
