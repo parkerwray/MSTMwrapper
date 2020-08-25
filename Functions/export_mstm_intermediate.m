@@ -11,7 +11,7 @@ result = [NaN, NaN, NaN]
 
 %}
 FLAG = 0;
-fid = fopen(File,'r');
+fid = fopen(strcat(File, "_output_intermediate.dat") ,'r');
 if fid == -1
     disp('Intermediate file does not exist!')
     %keyboard;
@@ -29,11 +29,21 @@ text = text';
 L = length(text);
 
 if strfind(text{L}, 'execution time:')
-    dummy = erase(text{L}, 'execution time:     ');
-    dummy = erase(dummy, ' min');
+    %dummy = erase(text{L}, 'execution time:     ');
+    dummy = erase(text{L}, 'execution time:');
+    dummy = erase(dummy, 'min');
     time = str2num(dummy);
+    %if isempty(time)
+    if length(time) ~= 1
+        dummy = erase(dummy, 'sec');
+        time = str2num(dummy) / 60;
+    end
+    if length(time) ~= 1
+        dummy = erase(dummy, 'hours');
+        time = str2num(dummy) * 60;
+    end
 
-    dummy = erase(text{L-1}, 'max iterations, soln error:    ');
+    dummy = erase(text{L-1}, 'max iterations, soln error:');
     dummy = str2num(dummy);
     result = [time, dummy];
 else
@@ -43,7 +53,9 @@ else
 end
 
 
-
+if length(result) ~= 3
+    keyboard;
+end
 end
 
 
