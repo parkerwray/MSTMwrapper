@@ -1,0 +1,1 @@
+This folder is the start of the analysis of convergence properties under our simulation procedure. The intent is to demonstrate a critical simulation size and number of simulations such that data with those criteria can be considered converged.

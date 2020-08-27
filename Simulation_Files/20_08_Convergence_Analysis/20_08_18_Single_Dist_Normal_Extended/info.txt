@@ -1,0 +1,9 @@
+This set of simulations was designed to test the convergence properties of a medium-width distribution.
+The properties were as follows:
+Bounds: [4,4,1]
+Distribution: 500 +- 100 nm
+Wavelengths: 2um-6um, 20 nm spacing
+Fill Fractions: 0.2, 0.4
+Number of distributions: 100
+
+No special procedure is needed to execute this code.
