@@ -22,7 +22,7 @@ oldFolder = cd(parentdir);
 result = zeros(3, Nsimulations);
 FLAG = zeros(1, Nsimulations);
 
-parfor (counter = 1:Nsimulations, 5)
+parfor (counter = 1:Nsimulations, 20)
     fname{counter} = strcat('mstm_', sprintf( '%03d',counter));
     [result(:,counter), FLAG(counter)] = export_mstm_intermediate(fname{counter});
 end
@@ -128,7 +128,7 @@ clearvars A0 B0 Ax0 Bx0 Iper0 Ipar0 sphere_coeffs_data sphere_coeffs_par sphere_
 clearvars dim_Ndistributions dim_wavelengths
 
 dim_Ndistributions = 3;
-dim_wavelengths = 4;
+dim_wavelengths = 3;
 %% GET MODE STATISTICS
 
 clearvars Astats Bstats Axstats Bxstats

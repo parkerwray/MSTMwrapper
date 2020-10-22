@@ -21,7 +21,7 @@ fprintf(fid, strcat(directory,'\n'));
 fprintf(fid,'end_comment\n');
 
 
-%% Stuff related to physical position of the sphers
+%% Stuff related to physical position of the spheres
 fprintf(fid,'number_spheres\n');
 fprintf(fid,'%d\n',mstm_input_params.Nspheres);
 
@@ -110,7 +110,9 @@ fprintf(fid, strcat(strrep(...
     '%e'),'e','d'),'\n'));
 
 fprintf(fid, 'max_number_iterations\n');
-fprintf(fid, '100000\n');
+fprintf(fid, strcat(strrep(...
+    num2str(convergence.max_number_iterations, '%d'),...
+    'e', 'd'), '\n'));
 
 fprintf(fid, 'store_translation_matrix\n');
 fprintf(fid, strcat(num2str(mstm_flags.store_translation_matrix,'%d')...

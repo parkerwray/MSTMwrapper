@@ -1,0 +1,9 @@
+This set of simulations was designed to test the quality of a first-iteration band pass filter.  
+The properties were as follows:
+Bounds: [8,8]
+Distribution: Custom (see end note)
+Wavelengths: 2um-6um, 20 nm spacing
+Fill Fractions: 0.1, 0.2, 0.3, 0.4
+Number of distributions: 25
+
+In order to execute this code, first import BandPass_Filter_40FF_Total_Workspace.mat, from the 20_07 optimization folder, and run without clearing variables.

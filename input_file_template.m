@@ -3,6 +3,8 @@
 % This is the number of cores used for all computations. Make sure that
 % matlab settings allow for at least this many to be used.
 cores = 10;
+% For reproducibility, pick a seed to initialize the simulation with.
+rng(12345);
 % This is the radius on which everything is scaled--even if the
 % distribution is not normal, it is important to specify this because 
 % this is what the bounds are scaled based on. In general, the mean

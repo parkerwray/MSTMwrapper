@@ -22,7 +22,7 @@ oldFolder = cd(parentdir);
 result = zeros(3, Nsimulations);
 FLAG = zeros(1, Nsimulations);
 
-parfor (counter = 1:Nsimulations, 5)
+parfor (counter = 1:Nsimulations, 20)
     fname{counter} = strcat('mstm_', sprintf( '%03d',counter));
     [result(:,counter), FLAG(counter)] = export_mstm_intermediate(fname{counter});
 end
