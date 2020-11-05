@@ -21,6 +21,11 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(...
 
 %} 
 
+    
+    
+    
+    
+    
 % test_PBCs; % Pass
 % test_fcc; % Pass
 % test_flips; % Pass
@@ -28,7 +33,7 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(...
 if nargin < 10
    distr = @(~) random('normal', r_mean, r_sigma); 
 end
-scale = 1; % Is there a computational improvement in changing the scale? -Parker
+scale = 10; % Is there a computational improvement in changing the scale? -Parker
 r = r_mean;
 %sigma = r_sigma;
 %distr = @(~) random('normal', r, sigma);
