@@ -33,7 +33,7 @@ function [spheres, ff] = randomly_placed_normally_distributed_kerker_spheres(...
 if nargin < 10
    distr = @(~) random('normal', r_mean, r_sigma); 
 end
-scale = 10; % Is there a computational improvement in changing the scale? -Parker
+scale = bounds; % Only for case of spherical boundary conditions
 r = r_mean;
 %sigma = r_sigma;
 %distr = @(~) random('normal', r, sigma);
