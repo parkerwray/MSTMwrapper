@@ -1,0 +1,9 @@
+This set of simulations was designed to test the quality of a ShortPass filter,$
+The properties were as follows:
+Bounds: [5,5]
+Distribution: Custom (see end note)
+Wavelengths: 2um-6um, 50 nm spacing
+Fill Fractions: 0.4
+Number of distributions: 25 
+
+$he 20_07 optimization results folder, corresponding to	the ShortPass filter.
