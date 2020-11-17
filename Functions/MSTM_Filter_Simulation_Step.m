@@ -441,6 +441,9 @@ for counter = 1:L1*L2*L3*L4
    %}
 end
 clearvars A0 B0 Ax0 Bx0 Iper0 Ipar0 sphere_coeffs_data sphere_coeffs_par sphere_coeffs_per
+
+dim_Ndistributions = 3;
+
 A = squeeze(cat(dim_Ndistributions, A(:,:,:,:,1,:,:),A(:,:,:,:,2,:,:)));
 B = squeeze(cat(dim_Ndistributions, B(:,:,:,:,1,:,:),B(:,:,:,:,2,:,:)));
 Ax = squeeze(cat(dim_Ndistributions, Ax(:,:,:,:,1,:,:),Ax(:,:,:,:,2,:,:)));
