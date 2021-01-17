@@ -14,6 +14,11 @@ function [A, Ax, B, Bx, sphere_coeffs_par0, sphere_coeffs_per0, spheres, sphere_
 
 rng(seed);
 
+wopt_cutoff = 10^-4;
+min_particle_diff = 1; %in nm
+[ropt, wopt] = aggregate_similar_particles(ropt, wopt, wopt_cutoff, min_particle_diff);
+
+
 index_type = index_info{1};
 if strcmp(index_type, "constant")
     n_const = index_info{2};
