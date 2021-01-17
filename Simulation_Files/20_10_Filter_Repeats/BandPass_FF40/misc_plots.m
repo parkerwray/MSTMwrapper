@@ -109,8 +109,8 @@ for i = 1:length(center_radiis)
     for j = 1:length(fill_fractions)
         sca(i, j, :) = fill_fractions(j) * wopt(i) * ...
             (squeeze(qsistats.mean(i, j, 1, :) + qsdstats.mean(i, j, 1, :)));
-        fbr_num(i, j, :) = wopt(i) * I(i, j, :, 1);
-        fbr_denom(i, j, :) = wopt(i) * I(i, j, :, 2);
+        fbr_num(i, j, :) = wopt(i) * I(i, :, 1);
+        fbr_denom(i, j, :) = wopt(i) * I(i, :, 2);
     end
 end
 fbr_net = sum(fbr_num, 1) ./ sum(fbr_denom, 1);
@@ -120,11 +120,11 @@ total_reflectances = squeeze(sca_net ./ (1 + fbr_net));
 %%
 figure,
 hold on
-plot(wavelengths, 100*squeeze(total_reflectances(4, :)), 'LineWidth', 6);
+plot(wavelengths, 100*squeeze(total_reflectances(:)), 'LineWidth', 6);
 %plot(wavelengths, squeeze(sca_net))
 %plot(wavelengths, squeeze(qastats.mean(1:4,4,1,:)));
-plot(lda, 100*Ropt, 'LineWidth', 6);
-plot(lda, 100*Rideal, 'LineWidth', 6);
+%plot(lda, 100*Ropt, 'LineWidth', 6);
+%plot(lda, 100*Rideal, 'LineWidth', 6);
 xlabel('Wavelength');
 ylabel('Reflectance (%)');
 ylim([0, 100]);
